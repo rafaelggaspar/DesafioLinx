@@ -1,0 +1,61 @@
+import pandas as pd
+import babel.numbers
+import decimal
+
+
+# Carrega dados dos arquivos json para memória
+offsalles = pd.read_json('C:/Users/rafae/.spyder-py3/files/offline_sales.json', lines=True)
+online_orders = pd.read_json('C:/Users/rafae/.spyder-py3/files/online_orders.json', lines=True)
+online_pageviews = pd.read_json('C:/Users/rafae/.spyder-py3/files/online_pageviews.json', lines=True)
+
+# Transforma em datasets para manipulação dos dados.
+df_online_pageviews = pd.DataFrame(online_pageviews)
+df_offsalles = pd.DataFrame(offsalles)
+df_online_orders = pd.DataFrame(online_orders)
+
+
+# Visualização dos dados para conferência
+df_online_orders.head()
+df_offsalles.head()
+df_online_pageviews.head()
+#---------------------------------------------------------
+#---------------------------------------------------------
+#---------------------------------------------------------
+#---------------------------------------------------------
+
+
+# 1. Qual foi o faturamento total no período?
+total_vendas = df_online_orders['price'].sum() +  df_offsalles['price'].sum() 
+
+# Ajusta máscara de saída para formato de moeda
+babel.numbers.format_currency( decimal.Decimal(total_vendas ), "GBP" )
+#---------------------------------------------------------
+
+
+
+# 2. Qual o produto mais comprado online?
+
+# Realizado a soma do item e enviado para uma variável, agrupando por soma
+maior_venda = df_online_orders.groupby('deviceType').price.sum()
+maior_venda = df_online_orders.sort_values(['deviceType'], ascending=False).groupby('deviceType').price.sum()
+print(maior_venda)
+#---------------------------------------------------------
+
+
+
+# 3. Cariocas gostam de comprar no fim de semana?
+
+# Filtrado somente as compras realizadas no estado do RJ
+df_Compras_cariocas = df_offsalles['state']=='RJ'
+
+# Jogar a seleção em outro DF para manipulação dos dados
+df_Compras_cariocas_filtrados= df_offsalles[df_Compras_cariocas]
+print(df_Compras_cariocas_filtrados)
+
+
+# Criei uma coluna para identificar qual dia da semana é, para facilitar a contagem
+df_Compras_cariocas_filtrados['DiaSemana'] = pd.DatetimeIndex(df_Compras_cariocas_filtrados['date']).day_name()
+
+# Contagem por dias da semana.
+df_Compras_cariocas_filtrados.groupby(['DiaSemana']).size()
+#---------------------------------------------------------
